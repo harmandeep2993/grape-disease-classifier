@@ -1,3 +1,5 @@
+
+import time
 import streamlit as st
 import requests
 import io
@@ -30,11 +32,20 @@ SAMPLE_IMAGES = {
 
 
 def call_api(image_bytes, filename):
-    response = requests.post(
-        f"{API_URL}/predict",
-        files={"file": (filename, image_bytes, "image/jpeg")}
-    )
-    return response.json()
+    for attempt in range(3):
+        try:
+            response = requests.post(
+                f"{API_URL}/predict",
+                files={"file": (filename, image_bytes, "image/jpeg")},
+                timeout=30
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(2)
+            else:
+                return {"error": str(e)}
 
 
 st.set_page_config(
@@ -102,44 +113,46 @@ with col2:
         )
 
 with col3:
-
     st.subheader("Result")
 
     if image and predict_clicked:
         with st.spinner("Analyzing..."):
             result = call_api(image_bytes, image_name)
 
-        pred  = result["prediction"]
-        conf  = result["confidence"]
-        color = CLASS_COLORS.get(pred, "gray")
-        bg    = CLASS_BG.get(pred, "#f5f5f5")
+        if "error" in result:
+            st.error(f"API error: {result['error']}")
+        else:
+            pred  = result["prediction"]
+            conf  = result["confidence"]
+            color = CLASS_COLORS.get(pred, "gray")
+            bg    = CLASS_BG.get(pred, "#f5f5f5")
 
-        st.markdown(
-            f"""
-            <div style="background:{bg}; border-radius:12px; padding:20px; text-align:center; margin-bottom:16px;">
-                <p style="font-size:11px; color:{color}; margin:0; letter-spacing:0.06em; text-transform:uppercase;">Prediction</p>
-                <p style="font-size:20px; font-weight:500; color:{color}; margin:6px 0;">{pred}</p>
-                <p style="font-size:14px; color:{color}; margin:0;">Confidence: {conf}%</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.caption("Probability per class")
-        for cls, prob in result["probabilities"].items():
-            short = cls.split("(")[0].strip() if "(" in cls else cls
-            color = CLASS_COLORS.get(cls, "gray")
             st.markdown(
                 f"""
-                <div style="display:flex; justify-content:space-between; align-items:center;
-                            padding:6px 10px; border-radius:8px; margin-bottom:6px;
-                            background:{'#f0f0f0' if cls != pred else bg};">
-                    <span style="font-size:13px; color:{'#333' if cls != pred else color};">{short}</span>
-                    <span style="font-size:13px; font-weight:500; color:{'#333' if cls != pred else color};">{prob}%</span>
+                <div style="background:{bg}; border-radius:12px; padding:20px; text-align:center; margin-bottom:16px;">
+                    <p style="font-size:11px; color:{color}; margin:0; letter-spacing:0.06em; text-transform:uppercase;">Prediction</p>
+                    <p style="font-size:20px; font-weight:500; color:{color}; margin:6px 0;">{pred}</p>
+                    <p style="font-size:14px; color:{color}; margin:0;">Confidence: {conf}%</p>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+
+            st.caption("Probability per class")
+            for cls, prob in result["probabilities"].items():
+                short = cls.split("(")[0].strip() if "(" in cls else cls
+                color = CLASS_COLORS.get(cls, "gray")
+                st.markdown(
+                    f"""
+                    <div style="display:flex; justify-content:space-between; align-items:center;
+                                padding:6px 10px; border-radius:8px; margin-bottom:6px;
+                                background:{'#f0f0f0' if cls != pred else bg};">
+                        <span style="font-size:13px; color:{'#333' if cls != pred else color};">{short}</span>
+                        <span style="font-size:13px; font-weight:500; color:{'#333' if cls != pred else color};">{prob}%</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
     elif not image:
         st.markdown(
