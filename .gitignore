@@ -227,3 +227,6 @@ models
 
 # uv package
 uv.lock
+
+
+upload_model.py
