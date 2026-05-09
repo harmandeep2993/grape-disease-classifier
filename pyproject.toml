@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.136.1",
+    "grad-cam>=1.5.5",
     "huggingface-hub>=1.14.0",
     "nicegui>=3.11.1",
     "numpy>=2.4.4",

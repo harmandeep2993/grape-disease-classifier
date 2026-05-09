@@ -2,12 +2,12 @@
 
 # 🍇 Grape Disease Classifier
 
-A deep learning application that classifies grape leaf diseases using transfer learning. Trained on the PlantVillage dataset and deployed as an interactive web application with a REST API backend.
+A deep learning application that classifies grape leaf diseases using transfer learning. Trained on the PlantVillage dataset and deployed as an interactive web application with a REST API backend. The application provides disease classification, confidence scores, OpenCV based disease spot detection with contour outlining, and Grad-CAM++ heatmap visualization showing which regions of the leaf the model focused on when making its prediction.
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.57-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![NiceGUI](https://img.shields.io/badge/NiceGUI-3.11-4B8BBE)](https://nicegui.io)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://docker.com)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-Space-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/spaces/harman2993/grape-disease-classifier)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
@@ -29,9 +29,9 @@ A deep learning application that classifies grape leaf diseases using transfer l
 
 ## Problem Statement
 
-Grape diseases cause significant crop losses worldwide and early detection is critical for effective treatment. Traditional disease identification relies on expert knowledge, which is not always accessible to farmers, especially in remote areas. Manual inspection is time-consuming, subjective, and prone to error.
+Grape diseases cause significant crop losses worldwide and early detection is critical for effective treatment. Traditional disease identification relies on expert knowledge which is not always accessible to farmers especially in remote areas. Manual inspection is time consuming, subjective and prone to error.
 
-This project addresses the problem by building an automated image classification system that can identify grape leaf diseases from a photograph. The goal is to provide an accurate, fast, and accessible tool that any farmer or agricultural professional can use without specialist knowledge.
+This project addresses the problem by building an automated image classification system that can identify grape leaf diseases from a photograph. The goal is to provide an accurate, fast and accessible tool that any farmer or agricultural professional can use without specialist knowledge.
 
 ---
 
@@ -48,6 +48,18 @@ The best model (DenseNet121 fine-tuned) achieves **99.34% test accuracy** with o
 
 ---
 
+## Features
+
+- Upload any grape leaf image or choose from built-in sample images
+- Instant disease classification with confidence scores per class
+- Disease spot detection using OpenCV color thresholding — outlines affected areas in red
+- Grad-CAM++ heatmap visualization showing which regions the model focused on
+- Split view showing original image alongside disease spots or Grad-CAM
+- Single page layout with no scrolling required
+- REST API with FastAPI for programmatic access
+
+---
+
 ## Project Structure
 
 ```
@@ -55,13 +67,16 @@ grape-disease-classifier/
 ├── api/
 │   └── main.py              # FastAPI prediction endpoint
 ├── frontend/
-│   └── app.py               # Streamlit web interface
+│   └── app.py               # NiceGUI web interface
 ├── src/
 │   ├── data/
 │   │   └── transforms.py    # Image preprocessing pipeline
-│   └── models/
-│       ├── model.py         # Model architecture definitions
-│       └── predict.py       # Inference logic
+│   ├── models/
+│   │   ├── model.py         # Model architecture definitions
+│   │   └── predict.py       # Inference logic
+│   └── utils/
+│       ├── gradcam.py        # Grad-CAM++ heatmap generation
+│       └── disease_detector.py  # OpenCV disease spot detection
 ├── test_images/             # Sample images for each class
 ├── notebooks/               # Colab training notebooks
 ├── models/                  # Saved model weights (not in repo)
@@ -86,6 +101,7 @@ grape-disease-classifier/
 
 The dataset is split into 70% train, 15% validation and 15% test using stratified sampling to preserve class distribution across all splits.
 
+![image](assest\dataset_sample_imagespng.png)
 ---
 
 ## Model
@@ -133,15 +149,30 @@ Confusion matrix on test set (610 images):
 | Leaf blight | 0 | 0 | 162 | 0 |
 | Healthy | 0 | 0 | 0 | 63 |
 
-Leaf blight and Healthy achieved zero mistakes. The only 4 errors occur between Black rot and Esca, which are visually similar diseases that even human experts sometimes confuse.
+Leaf blight and Healthy achieved zero mistakes. The only 4 errors occur between Black rot and Esca which are visually similar diseases that even human experts sometimes confuse.
 
+![](assest\densenet121_finetuned_confusion_matrix.png)
+
+---
+
+## Visualizations
+
+### Disease Spot Detection
+
+OpenCV color thresholding detects and outlines disease spots directly on the leaf image. Dark brown and rust colored regions are identified and outlined in red with a semi-transparent fill showing the extent of infection.
+
+![spot_image](assest\spot_identification.png)
+
+### Grad-CAM++
+
+Grad-CAM++ generates a heatmap showing which regions of the image the model focused on when making its prediction. Red areas indicate high attention. This confirms the model is learning genuine disease features rather than background artifacts.
+
+![](assest\grad_cam.png)
 ---
 
 ## Limitations
 
-This project has several limitations that are important to acknowledge:
-
-**Dataset scope:** The model is trained exclusively on PlantVillage images, which are taken under controlled laboratory conditions with consistent lighting and backgrounds. Performance on real-world field photographs may be lower due to varying lighting, angles, occlusions and image quality.
+**Dataset scope:** The model is trained exclusively on PlantVillage images taken under controlled laboratory conditions. Performance on real-world field photographs may be lower due to varying lighting, angles and image quality.
 
 **Class imbalance:** The Healthy class has only 423 images compared to 1383 for Esca. Although stratified splitting and augmentation were used to mitigate this, the model has seen fewer examples of healthy leaves during training.
 
@@ -158,8 +189,10 @@ This project has several limitations that are important to acknowledge:
 | Layer | Technology |
 |---|---|
 | Model training | PyTorch, torchvision |
+| Disease spot detection | OpenCV |
+| Model interpretability | Grad-CAM++ |
 | API | FastAPI |
-| Frontend | Streamlit |
+| Frontend | NiceGUI |
 | Deployment | Hugging Face Spaces via Docker |
 | Package management | uv |
 
@@ -214,6 +247,14 @@ Then run:
 uv run python download_model.py
 ```
 
+### Environment variables
+
+Create a `.env` file in the project root:
+
+```env
+API_URL=http://127.0.0.1:8000
+```
+
 ### Run locally
 
 Start the API in one terminal:
@@ -225,10 +266,10 @@ uv run uvicorn api.main:app --reload
 Start the frontend in another terminal:
 
 ```bash
-uv run streamlit run frontend/app.py
+uv run python frontend/app.py
 ```
 
-Open `http://localhost:8501` in your browser.
+Open `http://localhost:8080` in your browser.
 
 ---
 
@@ -257,7 +298,10 @@ curl -X POST "http://localhost:8000/predict" \
     "Esca (Black Measles)": 0.23,
     "Leaf blight (Isariopsis Leaf Spot)": 0.22,
     "healthy": 99.34
-  }
+  },
+  "spot_count": 0,
+  "annotated": "<base64 encoded PNG>",
+  "gradcam": "<base64 encoded PNG>"
 }
 ```
 
@@ -269,7 +313,7 @@ Build and run locally:
 
 ```bash
 docker build -t grape-disease-classifier .
-docker run -p 7860:7860 grape-disease-classifier
+docker run -p 8080:8080 grape-disease-classifier
 ```
 
 ---
