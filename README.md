@@ -46,7 +46,7 @@ This project detects four grape leaf conditions from an uploaded image:
 
 The best model (DenseNet121 fine-tuned) achieves **99.34% test accuracy** with only 4 mistakes out of 610 test images.
 
-![sample](assets/sample.png)
+![sample](assest/sample.png)
 
 ---
 
