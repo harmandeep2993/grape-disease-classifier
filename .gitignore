@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# temps
+temp
+.vscode
+
+# models
+models
+!src/models
+
+# uv package
+uv.lock
