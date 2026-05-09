@@ -46,6 +46,8 @@ This project detects four grape leaf conditions from an uploaded image:
 
 The best model (DenseNet121 fine-tuned) achieves **99.34% test accuracy** with only 4 mistakes out of 610 test images.
 
+![sample](assets/sample.png)
+
 ---
 
 ## Features
@@ -101,7 +103,7 @@ grape-disease-classifier/
 
 The dataset is split into 70% train, 15% validation and 15% test using stratified sampling to preserve class distribution across all splits.
 
-![image](assest\dataset_sample_imagespng.png)
+![image](assest/dataset_sample_imagespng.png)
 ---
 
 ## Model
@@ -151,7 +153,7 @@ Confusion matrix on test set (610 images):
 
 Leaf blight and Healthy achieved zero mistakes. The only 4 errors occur between Black rot and Esca which are visually similar diseases that even human experts sometimes confuse.
 
-![](assest\densenet121_finetuned_confusion_matrix.png)
+![](assest/densenet121_finetuned_confusion_matrix.png)
 
 ---
 
@@ -161,13 +163,13 @@ Leaf blight and Healthy achieved zero mistakes. The only 4 errors occur between 
 
 OpenCV color thresholding detects and outlines disease spots directly on the leaf image. Dark brown and rust colored regions are identified and outlined in red with a semi-transparent fill showing the extent of infection.
 
-![spot_image](assest\spot_identification.png)
+![spot_image](assest/spot_identification.png)
 
 ### Grad-CAM++
 
 Grad-CAM++ generates a heatmap showing which regions of the image the model focused on when making its prediction. Red areas indicate high attention. This confirms the model is learning genuine disease features rather than background artifacts.
 
-![](assest\grad_cam.png)
+![](assest/grad_cam.png)
 ---
 
 ## Limitations
@@ -320,11 +322,7 @@ docker run -p 8080:8080 grape-disease-classifier
 
 ## Author
 
-<div align="center">
-
-**Harmandeep Singh** — Data Science and AI/ML — Berlin
+**Harmandeep Singh** | Data Science and AI/ML
 
 [![GitHub](https://img.shields.io/badge/GitHub-harmandeep2993-181717?logo=github)](https://github.com/harmandeep2993)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-harman2993-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/harman2993)
-
-</div>
